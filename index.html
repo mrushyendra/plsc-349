@@ -73,7 +73,7 @@
         towns. Secondly, geographic features like islands also constrain where the subway can go. For instance, train lines have the highest density in Manhattan,
         and largely run parallel to the island, while other larger boroughs are more sparsely connected.
     </p>
-    <img src="metroSystemMaps.png" alt="Maps 8 major metro systems">
+    <img src="https://mrushyendra.github.io/plsc349/metroSystemMaps.png" alt="Maps 8 major metro systems">
     <p>
         Network maps give us a good idea of the geography of the city and the network, but can be deceiving about the actual lengths of the lines or their
         usage. For instance, it is difficult to gauge from the chart above which city has the largest system or the most heavily used one.
@@ -84,7 +84,7 @@
         Note that the values for some cities, particularly those with older subway systems, are estimates from Google Maps owing to the sparsity of data about the
         dates and routes of their construction.
     </p>
-    <img src="metroLengthsGraph.png" alt="Line chart of the lengths of 8 major metro systems over time" width="900" height="675">
+    <img src="https://mrushyendra.github.io/plsc349/metroLengthsGraph.png" alt="Line chart of the lengths of 8 major metro systems over time" width="900" height="675">
     <p>
         The graph above is truncated and begins only at 1950, but the New York and London metro systems have existed for far longer than those of the other
         cities in this chart. They have an impressively long history that starts in the mid-19th century and even predates various modern inventions such as
@@ -101,7 +101,7 @@
         In comparison highly dense, geographically constrained cities such as Cairo generally seem to have higher ridership relative to their lengths.
         Cairo in particular has had its ridership shoot up in recent years, fuelled both by geography, a population explosion in Egypt, and due to urban migration.
     </p>
-    <img src="metroRidershipGraph.png" alt="Line chart of the daily avg ridership numbrs of 8 major metro systems over time" width="900" height="675">
+    <img src="https://mrushyendra.github.io/plsc349/metroRidershipGraph.png" alt="Line chart of the daily avg ridership numbrs of 8 major metro systems over time" width="900" height="675">
     <p>
         With the two charts above, it is still difficult to gauge how efficient the train systems of different cities are at moving large numbers of people,
         since we have to combine and remember information from both to make a conclusion. The following chart condenses the information above into one plot
@@ -111,7 +111,7 @@
         was used to determine which population measure (city proper, or Metropolitan area) would be best to use for each city in the chart, based on the reach of its metro
         system versus suburban rail systems.
     </p>
-    <img src="populationRidershipGraph.png" alt="Bubble scatter plot of length, ridership and population of the city of 8 major metro systems in 2018" width="900" height="720">
+    <img src="https://mrushyendra.github.io/plsc349/populationRidershipGraph.png" alt="Bubble scatter plot of length, ridership and population of the city of 8 major metro systems in 2018" width="900" height="720">
 
     <h2>
         Visualizing Subway Usage
@@ -183,7 +183,7 @@
                 .attr("class", "geojson")
                 .attr("d", geoGenerator);
 
-            $.getJSON("https://data.cityofnewyork.us/api/geospatial/arq3-7z49?method=export&format=GeoJSON",
+            $.getJSON("https://mrushyendra.github.io/plsc349/subwayStations.geojson",
                 renderSubwayStations);
         }
 
@@ -290,7 +290,7 @@
                 .text("(Hover over map to read station names)")
         }
 
-        $.getJSON("https://data.cityofnewyork.us/api/geospatial/3qz8-muuu?method=export&format=GeoJSON",
+        $.getJSON("https://mrushyendra.github.io/plsc349/subwayLines.geojson",
             renderSubwayLines);
         renderTitle();
         console.log("hello, world 2");
@@ -338,9 +338,3 @@
     </p>
     <a id="pg2" href="pg2.html">Second Page</a>
 </body>
-
-<!--
-    add either actual numbers or scale to map
-    add more station names
-    create zip folder of all docs
--->
