@@ -20,24 +20,36 @@
         {
             font-size: 24pt;
         }
-        p
+        p, li
         {
             font-family: 'Rubik';
         }
     </style>
     <h2>
-        Visualizing Usage Data - Interactive
+        Visualizing Usage Data II
     </h2>
     <p>
+       The following chart is a modified version of the one on the previous page. It breaks down station usage counts into 4-hour
+       blocks and displays them in a cyclical fashion in a continuous loop. This enables us to see how dramatically station usage
+       varies by the time of the day, and how the pattern of variation changes between stations in commercial areas and stations in
+       residential neighborhoods.
+       
+       Creating this chart first required collating the turnstile data into 4-hour blocks per station. Next, in addition to the steps
+       described in the previous page, a function was written to update the heights of the bars on each station at regular intervals
+       based on the time of the day. This function recursively calls itself with a different time value at each instance, thus infinitely
+       cycling through the different intervals of the day.
 
+       The usage patterns as seen in the chart largely seems to match our intuitions. Usage is lowest in the wee hours of the morning,
+       and highest around mid-day and during the evening rush hour. Stations in central Manhattan are the most heavily used, followed by
+       a few other stations in central parts of Brooklyn or Queens. Since this is turnstile entry data, we can see that the outer reaches
+       of the city generally have more entries in the morning rush hour, when people are heading to work, than in the evenings, when people
+       are heading back.
     </p>
+    <p></br></p>
     <div id="content">
         <svg id="map" width="2400px" height="1600px">
         </svg>
     </div>
-    <!-- http://bl.ocks.org/grahamjenson/8192663 
-    https://www.d3indepth.com/geographic/ 
-    http://web.mta.info/developers/turnstile.html -->
     <style>
 
         .background {
@@ -92,10 +104,6 @@
                 renderSubwayStations);
         }
 
-        // https://www.sitepoint.com/delay-sleep-pause-wait/ Function to wait before updating chart
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
         var colorScale = d3.scaleLinear().domain([1,10000]).range(["white", "#900603"]); // https://www.d3-graph-gallery.com/graph/custom_color.html
 
         var renderSubwayStations = function(subwayData){
@@ -157,7 +165,7 @@
                         if(countMap){
                             count = countMap.get("total");
                         }
-                        return geoGenerator.centroid(d.geometry)[1] - (count/150000) * 80;}) // set origin to base of rectangle
+                        return geoGenerator.centroid(d.geometry)[1];})
                     .attr("rx", 2)
                     .attr("stroke", "#900603")
                     .attr("stroke-width", 1)
@@ -180,6 +188,7 @@
     
         var renderLabels = function(subwayData, geoGenerator){
             d3.select('#map').append("g").selectAll("text").data(subwayData.features).enter().append("text")
+                .attr("id", "stationNames")
                 .attr("transform", d => `translate(${geoGenerator.centroid(d.geometry)})`)
                 .attr("text-anchor", "middle")
                 .attr("font-size", 14)
@@ -191,7 +200,7 @@
         }
 
         var enableInteractive = function(){
-            d3.select('#map').selectAll("text").on("mouseover",function(d) { // http://bl.ocks.org/almccon/a53831a573911d0a875821c5f9fac6be
+            d3.select('#map').selectAll("#stationNames").on("mouseover",function(d) { // http://bl.ocks.org/almccon/a53831a573911d0a875821c5f9fac6be
                 d3.select(this)
                 .classed("active",true)
                 .attr("fill", "black")
@@ -206,7 +215,7 @@
         var updateRidership = function(idx, times, subwayData, turnstileData){
             console.log("idx: ", idx);
             if(idx >= times.length){
-                return;
+                idx = idx % times.length;
             }
             let time = times[idx];
             d3.select('#time').text(time);
@@ -248,7 +257,17 @@
                 .attr("y", 40)
                 .attr("text-anchor", "middle")
                 .style("font-size", "48px")
-                .text("NYC Subway Station Passengers")
+                .attr("font-family", "Merriweather")
+                .text("NYC Subway Usage By Station")
+
+            d3.select('#map').append("text")
+                .attr("id", "subtitle")
+                .attr("x", width/2)
+                .attr("y", 70)
+                .attr("text-anchor", "middle")
+                .style("font-size", "32px")
+                .attr("font-family", "Rubik")
+                .text("(Hover over map to read station names)")
         }
 
         $.getJSON("https://mrushyendra.github.io/plsc349/subwayLines.geojson",
@@ -256,4 +275,46 @@
         renderTitle();
         console.log("hello, world");
     </script>
+    <h2>
+        Conclusion and Future Steps
+    </h2>
+    <p>
+        The illustrations in this project offer a glimpse at only selected portions of the subway network, and of
+        other networks around the globe. A full suite of visualizations into all aspects of the network could fill
+        several tomes. For instance, ridership data could be compared across months or the days of the week to look
+        at patterns on a macro scale. Animated maps could be used to look at how distorted the official subway map is
+        compared to the actual geographical orientations of the lines. Visualizations could be used to show how close
+        people live or work to a subway station, and the distances that are reachable from each station within a certain
+        time period, although the challenge is to find robust data for this purpose. Lastly, visualizations could be used
+        to show causes or trends in train delays, either across years, or separated by line and train rolling stock.
+    </p>
+    <h2>References</h2> 
+    <p>
+        <ol>
+            <li>Delhi Metro Network Length and Ridership: https://www.researchgate.net/figure/Development-of-Delhi-Metro-Service_tbl5_332209033</li>
+            <li>Delhi Metro Network Length and Ridership: https://epaper.timesgroup.com/Olive/ODN/TimesOfIndia/shared/ShowArticle.aspx?doc=TOIDEL%2F2017%2F12%2F25&entity=Ar00201&sk=308E16E4&mode=text#</li>
+            <li>Shanghai Metro Network Length and Ridership: https://medium.com/@nedopil/the-impressive-development-of-beijing-s-and-shanghai-s-subway-system-in-comparison-to-berlin-and-f73dad343fc0</li>
+            <li>Mexico City Metro Network Ridership: https://www.accessmagazine.org/spring-2015/suburban-transit-in-mexico-city/</li>
+            <li>Mexico City Metro Network Length: https://web.archive.org/web/20160821212055/http://www.metro.cdmx.gob.mx/organismo/cronologia.html</li>
+            <li>Mexico City Metro Network Length: https://web.archive.org/web/20160821130333/http://www.metro.cdmx.gob.mx/operacion/longlineas.html</li> 
+            <li>Cairo Metro Network Ridership: https://www.researchgate.net/figure/Number-of-Passengers-of-Cairo-Metro-based-on-Cairo-Metro-2012b_fig5_334376341</li>
+            <li>Cairo Metro Network Length: https://web.archive.org/web/20140622172949/http://cairometro.gov.eg/UIPages/LineView.aspx</li>
+            <li>NYC Subway Ridership: http://web.mta.info/mta/investor/pdf/2001app-a.pdf</li>
+            <li>NYC Subway Ridership: http://web.mta.info/nyct/facts/ridership/</li>
+            <li>NYC Subway Ridership: https://new.mta.info/document/16136</li>
+            <li>NYC Subway Ridership: https://new.mta.info/document/16136</li>
+            <li>NYC Subway Network Length: https://en.wikipedia.org/wiki/List_of_New_York_City_Subway_lines, accompanied by Google Maps</li>
+            <li>London Tube Ridership: https://www.imperial.ac.uk/media/imperial-college/research-centres-and-groups/centre-for-transport-studies/rtsc/world-bank/Operators-Story_London-Underground_Final_210217.pdf</li>
+            <li>London Tube Network Length: https://en.wikipedia.org/wiki/London_Underground#Lines</li>
+            <li>Seoul Metro Ridership: https://www.globalmasstransit.net/archive.php?id=36251</li>
+            <li>Seoul Metro Ridership: https://www.globalmasstransit.net/archive.php?id=36251</li>
+            <li>Seoul Metro Network Length: http://www.urbanrail.net/as/kr/seoul/seoul-subway-opening-dates.htm</li>
+            <li>Washington DC Metro Ridership: https://www.wmata.com/initiatives/ridership-portal/upload/2017_historical_rail_ridership.pdf</li>
+            <li>Washington DC Metro Network Length: https://en.wikipedia.org/wiki/Washington_Metro#Opening_dates, accompanied by Google Maps</li>
+            <li>NYC Subway Turnstile Data: http://web.mta.info/developers/turnstile.html</li>
+            <li>NYC Subway GeoJSON Data: https://data.cityofnewyork.us/Transportation/Subway-Lines/3qz8-muuu</li>
+            <li>D3.js GeoJSON tutorial: http://bl.ocks.org/grahamjenson/8192663</li>
+            <li>D3.js Mouse Interaction tutorial: http://bl.ocks.org/almccon/a53831a573911d0a875821c5f9fac6be</li>   
+        </ol>
+    </p>
 </body>
