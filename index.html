@@ -1,0 +1,278 @@
+<head></head>
+<body>
+    <link href='https://fonts.googleapis.com/css?family=Merriweather' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet"> 
+    <style>
+        h1
+        {
+            font-family: 'Merriweather';
+            color: black;
+            font-size: 32pt;
+            font-stretch: semi-expanded;
+        }
+        h2
+        {
+            font-family: 'Merriweather';
+            color: rgb(51, 49, 49);
+            font-size: 24pt;
+        }
+        a
+        {
+            font-size: 24pt;
+        }
+        p
+        {
+            font-family: 'Rubik';
+        }
+    </style>
+    <h1>
+        Visualizing the New York City Subway System
+    </h1>
+    <h2>
+        PLSC 349 Final Project</br>
+        Rushyendra Maganty
+    </h2>
+</br>
+
+    <h2>
+        Introduction
+    </h2>
+    <p>
+        Mass transit systems are the life blood of any major city. Growing sustainably beyond a certain size necessitates fast, reliable and high-capacity rail
+        transport to move masses between homes, schools, workplaces and host of other locations. Each city's rail system has its own unique characteristics and quirks,
+        including its name, topography, reliability, usage patterns or growth plans. New York City's subway system is no exception. First opened in the late 19th century,
+        it has grown over the years to encompass 250 miles of track and more than 400 stations. In that time, it has become a New York City institution, and sparked both
+        love and revulsion alike in the city's inhabitants.
+    </p>
+    <p>
+        Visualizing any subway system is a challenge, owing to the fact that no single set of numbers can truly encompass everything about such a system. Nevertheless, this essay
+        attempts to try. First, it will visualize the NYC subway system in the context of subway systems around the globe, aiming to give us a better picture of its size, scale,
+        reach and growth in comparison to the systems of countries around the globe. Next, it aims to visualize the ridership patterns of the subway in an interactive manner, helping
+        us understand more about how the subway is used, and ultimately, about New York City itself runs. The interactive charts and accompanying explanations will be interspersed by
+        descriptions of how the visualizations in this section were created to begin with, ranging from collecting and cleaning data, to designing the code that powers the visualizations.
+    </p>
+
+    <h2>
+        The NYC Subway In Context
+    </h2>
+    <p>
+        tells us not just about the topography of the network, but about the city itself
+        unlike inland cities like seoul, delhi or london, who network sprawls in all directions, NYC's subway is constrained by two things:
+        - cairo, which is along the river nile
+        - hub and spoke model
+        - city and state boundaries. commuter trains going into new jersey or connecticut, with subway largely confined with the city limits
+        - island shapes: lines cluster in manhattan, with the highest density of lines, with other boroughs less sparsely connected.
+    </p>
+    <img src="../metroSystemMaps.png" alt="Maps 8 major metro systems">
+    <p>
+        Network maps give us a good idea of the geography of the city and the network, but can be deceiving about the actual lengths of the lines or their
+        usage. For instance, it is difficult to gauge from the chart above which of the city has the largest system or the most heavily used one.
+        The next few charts aim to isolate those factors into separate line and bubble charts.
+        The first graph depicts how the network lengths of metro systems have grown over time. Gathering the requisite data for all 8 systems was a surprisingly
+        difficult challenge. Information for each line in each city was often widely scattered, which required painstaking work to piece together all the various lines
+        or phase openings across years from different sources to build an estimate of the lengths of the overall networks over the years.
+    </p>
+    <img src="../metroLengthsGraph.png" alt="Line chart of the lengths of 8 major metro systems over time" width="900" height="675">
+    <p>
+        - while this graph is truncated and begins only at 1950, it can be seen that the New York and London metro systems have existed for far longer than those of the other
+        cities in this chart. Have an impressively long history that predated various modern inventions such as electric trains
+        - while they had a headstart, cities in other continents are fast catching up
+        - dismal growth since the mid 20th century in developed nations. In contrast the pace of construction in cities like Shanghai, Seoul and Delhi is astonishing, and if
+        current construction rates continue, the will soon reach or exceed the network lengths of major western cities
+    </p>
+    <p>
+        The next chart looks at how average daily ridership numbers of these systems have changed over time.
+        By and large corresponds to the same trends, and follow the same ranks seen in the network lengths graph.
+        some exceptions are the less dense/more sprawled out cities - Delhi and Washington D.C. doing worse relative to their lengths
+        While highly dense Cairo has had its ridership shot up in recent years, fuelled both by geography and by urban migration/population explosion
+    </p>
+    <img src="../metroRidershipGraph.png" alt="Line chart of the daily avg ridership numbrs of 8 major metro systems over time" width="900" height="675">
+    <p>
+        With the above two charts, it is still tough to gauge how efficient these systems are at moving large numbers of people, since we have to combine
+        information from the two charts to make a conclusion
+        the following one condenses the information into one chart
+        displays the length and daily ridership of the networks in 2018 juxtaposed against the popuation of the cities
+        caveat that this is an imperfect measure. City definitions are highly dependent on the historical administrative quirks of that area
+        For example, Shanghai has a much larger city proper area, while other cities are more narrowly defined
+    </p>
+    <img src="../populationRidershipGraph.png" alt="Bubble scatter plot of length, ridership and population of the city of 8 major metro systems in 2018" width="900" height="720">
+
+    <h2>
+        Visualizing Subway Usage
+    </h2>
+    
+
+    <div id="content">
+        <svg id="map" width="2400px" height="1600px">
+        </svg>
+    </div>
+    <!-- http://bl.ocks.org/grahamjenson/8192663 
+    https://www.d3indepth.com/geographic/ 
+    http://web.mta.info/developers/turnstile.html -->
+    <style>
+
+        .background {
+          fill: #a4bac7;
+        }
+        
+        .foreground {
+          fill: none;
+          stroke: #333;
+          stroke-width: 1.5px;
+        }
+        
+        .geojson {
+         fill: none;
+         stroke: red;
+         stroke-width: 5;
+        }
+        
+        .boundary {
+          fill: none;
+          stroke: #a5967e;
+        }
+
+        path.active {
+            fill: pink;
+        }
+        
+    </style>
+        
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3"></script>
+    <link href="https://fonts.googleapis.com/css?family=Saira:100,200,300,400,500,600,700,800,900" rel="stylesheet"> 
+   <link href="https://fonts.googleapis.com/css?family=Saira|Saira+Condensed|Saira+Extra+Condensed|Saira+Semi+Condensed" rel="stylesheet"> 
+    <script>
+        var renderSubwayLines = function(subwayData){
+            var width = $('#map').width();
+            var height = $('#map').height();
+            let projection = d3.geoMercator().fitSize([width, height], subwayData);
+            let geoGenerator = d3.geoPath().projection(projection);
+            let subwayLines = subwayData.features.map(d => d.geometry);
+
+            d3.select('#map').append("g").selectAll(".geojson")
+                .data(subwayLines).enter().append("path")
+                .style("fill", "none")
+                .style("stroke", "#808588")
+                .style("stroke-width", 4)
+                .style("stoke-linejoin", "miter")
+                .attr("class", "geojson")
+                .attr("d", geoGenerator);
+
+            $.getJSON("https://data.cityofnewyork.us/api/geospatial/arq3-7z49?method=export&format=GeoJSON",
+                renderSubwayStations);
+        }
+
+        var renderSubwayStations = function(subwayData){
+            var width = $('#map').width();
+            var height = $('#map').height();
+            let projection = d3.geoMercator().fitSize([width, height], subwayData);
+            let geoGenerator = d3.geoPath().projection(projection);
+
+            d3.csv("https://mrushyendra.github.io/plsc349/turnstileData.csv").then((data) => {
+                d3.select('#map').append("g").selectAll('rect').data(subwayData.features).join('rect') // https://www.d3-graph-gallery.com/graph/bubblemap_template.html
+                    //.attr("transform", d => `translate(${geoGenerator.centroid(d.geometry)})`)
+                    .attr("width", 4)
+                    .attr("height", function(d){ 
+                        var count = 0;
+                        for(var i = 1; i < data.length; ++i){
+                            if(data[i].STATION == d.properties.name){
+                                if(data[i].SCP == data[i-1].SCP){
+                                    count += (parseInt(data[i].ENTRIES, 10) - parseInt(data[i-1].ENTRIES,10));
+                                }
+                            }
+                        }
+                        if(count > 0){
+                            console.log("count: ", count);  
+                        }
+                        return (count/150000) * 80;})//return Math.random()*10;})
+                    .attr("x", function(d){
+                        return geoGenerator.centroid(d.geometry)[0];})
+                    .attr("y", function(d){
+                        var count = 0;
+                        for(var i = 1; i < data.length; ++i){
+                            if(data[i].STATION == d.properties.name){
+                                if(data[i].SCP == data[i-1].SCP){
+                                    count += (parseInt(data[i].ENTRIES, 10) - parseInt(data[i-1].ENTRIES,10));
+                                }
+                            }
+                        }
+                        return geoGenerator.centroid(d.geometry)[1] - ((count/150000) * 80);}) // set origin to base of rectangle
+                    .attr("rx", 2)
+                    .attr("stroke", "#900603")
+                    .attr("fill", "#900603")
+                    .attr("stroke-width", 1)
+                    .attr("fill-opacity", 0.3);
+
+                /*d3.select('#map').append("g").selectAll('circle').data(subwayData.features).join("circle") // https://www.d3-graph-gallery.com/graph/bubblemap_template.html
+                    .attr("transform", d => `translate(${geoGenerator.centroid(d.geometry)})`)
+                    .attr("r", function(d){ 
+                        var count = 0;
+                        for(var i = 1; i < data.length; ++i){
+                            if(data[i].STATION == d.properties.name){
+                                if(data[i].SCP == data[i-1].SCP){
+                                    count += (parseInt(data[i].ENTRIES, 10) - parseInt(data[i-1].ENTRIES,10));
+                                }
+                            }
+                        }
+                        if(count > 0){
+                            console.log("count: ", count);  
+                        }
+                        return (count/150000) * 20;})
+                    .attr("stroke", "#900603")
+                    .attr("fill", "#900603")
+                    .attr("stroke-width", 1)
+                    .attr("fill-opacity", 0.3);*/
+
+                renderLabels(subwayData, geoGenerator);
+            });
+        }
+
+        var renderLabels = function(subwayData, geoGenerator){
+            d3.select('#map').append("g").selectAll("text").data(subwayData.features).enter().append("text")
+                .attr("transform", d => `translate(${geoGenerator.centroid(d.geometry)})`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 14)
+                .attr("font-family", "Saira")
+                .attr("fill", "transparent")
+                .text(d => d.properties.name);   
+        
+            enableInteractive();
+        }
+
+        var enableInteractive = function(){
+            d3.select('#map').selectAll("text").on("mouseover",function(d) { // http://bl.ocks.org/almccon/a53831a573911d0a875821c5f9fac6be
+                d3.select(this)
+                .classed("active",true)
+                .attr("fill", "black")
+            })
+            .on("mouseout",function(d){
+                d3.select(this)
+                .classed("active",false)
+                .attr("fill", "transparent")
+            })
+
+            d3.select('#map').selectAll("circle").on("mouseover",function(d) {
+                d3.select(this)
+                .classed("active",true)
+                .attr("fill", "#808588")
+            })
+            .on("mouseout",function(d){
+                d3.select(this)
+                .classed("active",false)
+                .attr("fill", "#900603")
+            })
+        }
+
+        $.getJSON("https://data.cityofnewyork.us/api/geospatial/3qz8-muuu?method=export&format=GeoJSON",
+            renderSubwayLines);
+        console.log("hello, world 2");
+    </script>
+
+
+    <a href="pg2.html">Second Page</a>
+</body>
+

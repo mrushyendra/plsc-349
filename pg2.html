@@ -1,0 +1,259 @@
+<head></head>
+<body>
+    <link href='https://fonts.googleapis.com/css?family=Merriweather' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap" rel="stylesheet"> 
+    <style>
+        h1
+        {
+            font-family: 'Merriweather';
+            color: black;
+            font-size: 32pt;
+            font-stretch: semi-expanded;
+        }
+        h2
+        {
+            font-family: 'Merriweather';
+            color: rgb(51, 49, 49);
+            font-size: 24pt;
+        }
+        a
+        {
+            font-size: 24pt;
+        }
+        p
+        {
+            font-family: 'Rubik';
+        }
+    </style>
+    <h2>
+        Visualizing Usage Data - Interactive
+    </h2>
+    <p>
+
+    </p>
+    <div id="content">
+        <svg id="map" width="2400px" height="1600px">
+        </svg>
+    </div>
+    <!-- http://bl.ocks.org/grahamjenson/8192663 
+    https://www.d3indepth.com/geographic/ 
+    http://web.mta.info/developers/turnstile.html -->
+    <style>
+
+        .background {
+          fill: #a4bac7;
+        }
+        
+        .foreground {
+          fill: none;
+          stroke: #333;
+          stroke-width: 1.5px;
+        }
+        
+        .geojson {
+         fill: none;
+         stroke: red;
+         stroke-width: 5;
+        }
+        
+        .boundary {
+          fill: none;
+          stroke: #a5967e;
+        }
+
+        path.active {
+            fill: pink;
+        }
+        
+    </style>
+        
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-fetch@3"></script>
+    <script>
+        var renderSubwayLines = function(subwayData){
+            var width = $('#map').width();
+            var height = $('#map').height();
+            let projection = d3.geoNaturalEarth1().fitSize([width, height], subwayData);
+            let geoGenerator = d3.geoPath().projection(projection);
+            let subwayLines = subwayData.features.map(d => d.geometry);
+
+            d3.select('#map').append("g").selectAll(".geojson")
+                .data(subwayLines).enter().append("path")
+                .style("fill", "none")
+                .style("stroke", "#808588")
+                .style("stroke-width", 4)
+                .style("stoke-linejoin", "miter")
+                .attr("class", "geojson").attr("d", geoGenerator);
+            
+            $.getJSON("https://mrushyendra.github.io/plsc349/subwayStations.geojson",
+                renderSubwayStations);
+        }
+
+        // https://www.sitepoint.com/delay-sleep-pause-wait/ Function to wait before updating chart
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        var colorScale = d3.scaleLinear().domain([1,10000]).range(["white", "#900603"]); // https://www.d3-graph-gallery.com/graph/custom_color.html
+
+        var renderSubwayStations = function(subwayData){
+            var width = $('#map').width();
+            var height = $('#map').height();
+            let projection = d3.geoNaturalEarth1().fitSize([width, height], subwayData);
+            let geoGenerator = d3.geoPath().projection(projection);
+
+            d3.csv("https://mrushyendra.github.io/plsc349/turnstileData.csv").then((data) => {
+                let turnstileData = new Map();
+                for(var i = 1; i < data.length; ++i){
+                    if(data[i].SCP == data[i-1].SCP){
+                        entries = (parseInt(data[i].ENTRIES, 10) - parseInt(data[i-1].ENTRIES,10));
+                        let prevMap = turnstileData.get(data[i].STATION);
+                        if(prevMap){
+                            let prevTotalCount = prevMap.get("total");
+                            let prevTimeCount = prevMap.get(data[i].TIME);
+                            prevMap.set("total", entries + prevTotalCount);
+                            prevMap.set(data[i].TIME, entries + prevTimeCount);
+
+                        } else {
+                            let stationSummary = new Map();
+                            stationSummary.set("total", entries);
+                            stationSummary.set("03:00:00", 0);
+                            stationSummary.set("07:00:00", 0);
+                            stationSummary.set("11:00:00", 0);
+                            stationSummary.set("15:00:00", 0);
+                            stationSummary.set("19:00:00", 0);
+                            stationSummary.set("23:00:00", 0);
+                            turnstileData.set(data[i].STATION, stationSummary);
+                        }
+                    }
+                }
+
+                // render time block
+                d3.select('#map').append("text")
+                    .attr("id", "time")
+                    .attr("x", width/4)
+                    .attr("y", height/6)
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "32px")
+                    .text("")                
+                
+                d3.select('#map').append("g").selectAll('rect').data(subwayData.features).join('rect') // https://www.d3-graph-gallery.com/graph/bubblemap_template.html
+                    .attr("width", 4)
+                    .attr("height", function(d){ 
+                        var countMap = turnstileData.get(d.properties.name);
+                        if(countMap){
+                            let count = countMap.get("total");
+                            console.log("count: ", count);
+                            return (count/150000) * 80;
+                        }
+                        return 0;})
+                    .attr("x", function(d){
+                        return geoGenerator.centroid(d.geometry)[0];})
+                    .attr("y", function(d){
+                        var countMap = turnstileData.get(d.properties.name);
+                        var count = 0;
+                        if(countMap){
+                            count = countMap.get("total");
+                        }
+                        return geoGenerator.centroid(d.geometry)[1] - (count/150000) * 80;}) // set origin to base of rectangle
+                    .attr("rx", 2)
+                    .attr("stroke", "#900603")
+                    .attr("stroke-width", 1)
+                    .attr("fill-opacity", 0.3)
+                    .attr("fill", function(d){
+                        var countMap = turnstileData.get(d.properties.name);
+                        var count = 0;
+                        if(countMap){
+                            count = countMap.get("total");
+                        }                   
+                        return colorScale(Math.min(count, 10000));
+                    });
+
+                renderLabels(subwayData, geoGenerator);
+                
+                var times = ["03:00:00", "07:00:00", "11:00:00", "15:00:00", "19:00:00", "23:00:00"];
+                updateRidership(0, times, subwayData, turnstileData);
+            });
+        }
+    
+        var renderLabels = function(subwayData, geoGenerator){
+            d3.select('#map').append("g").selectAll("text").data(subwayData.features).enter().append("text")
+                .attr("transform", d => `translate(${geoGenerator.centroid(d.geometry)})`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 14)
+                .attr("font-family", "Saira")
+                .attr("fill", "transparent")
+                .text(d => d.properties.name);   
+        
+            enableInteractive();
+        }
+
+        var enableInteractive = function(){
+            d3.select('#map').selectAll("text").on("mouseover",function(d) { // http://bl.ocks.org/almccon/a53831a573911d0a875821c5f9fac6be
+                d3.select(this)
+                .classed("active",true)
+                .attr("fill", "black")
+            })
+            .on("mouseout",function(d){
+                d3.select(this)
+                .classed("active",false)
+                .attr("fill", "transparent")
+            })
+        }
+
+        var updateRidership = function(idx, times, subwayData, turnstileData){
+            console.log("idx: ", idx);
+            if(idx >= times.length){
+                return;
+            }
+            let time = times[idx];
+            d3.select('#time').text(time);
+
+            var transitions = 0;
+            d3.select('#map').selectAll('rect').data(subwayData.features).transition().duration(6000).delay(100).attr("height", function(d){
+                transitions++; // hack to ensure next transition is only called once all elements have finished changing
+                var countMap = turnstileData.get(d.properties.name);
+                var count = 0;
+                if(countMap){
+                    count = countMap.get(time);
+                }
+
+                return (count/10000) * 30;
+            })
+            .attr("fill", function(d){
+                var countMap = turnstileData.get(d.properties.name);
+                var height = 0;
+                if(countMap){
+                    let count = countMap.get(time);
+                    height = Math.min(count, 10000);
+                }                   
+                return colorScale(height);
+            })
+            .on("end", function(){
+                --transitions;
+                if(transitions == 0){
+                updateRidership(idx+1, times, subwayData, turnstileData)
+                }
+            });
+        }
+
+        var renderTitle = function(){
+            var width = $('#map').width();
+            var height = $('#map').height();
+            d3.select('#map').append("text")
+                .attr("id", "title")
+                .attr("x", width/2)
+                .attr("y", 40)
+                .attr("text-anchor", "middle")
+                .style("font-size", "48px")
+                .text("NYC Subway Station Passengers")
+        }
+
+        $.getJSON("https://mrushyendra.github.io/plsc349/subwayLines.geojson",
+            renderSubwayLines);
+        renderTitle();
+        console.log("hello, world");
+    </script>
+</body>
